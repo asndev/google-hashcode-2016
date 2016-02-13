@@ -7,6 +7,8 @@ import java.util.Stack;
 
 import org.assertj.core.util.VisibleForTesting;
 
+import de.antonstepan.hackathonstarter.sorter.DistancePlusItemsSorter;
+import de.antonstepan.hackathonstarter.sorter.ItemSizeThenDistanceSorter;
 import de.antonstepan.helper.FileUtils;
 
 public class Simulation {
@@ -47,14 +49,19 @@ public class Simulation {
   public void makeMove(int currentMove) {
     for (Drone drone : drones) {
       boolean isFree = drone.isFree(currentMove);
-      if (isFree && currentOrderIndex < orders.size()) {
-        Order order = orders.get(currentOrderIndex);
-        currentOrderIndex++;
+      if (isFree && orders.size() > 0) {
+        Order order = findBestOrder(drone);
         makeMove(currentMove, drone, order);
       }
     }
   }
 
+  private Order findBestOrder(Drone drone) {
+    orders.sort(new ItemSizeThenDistanceSorter(drone));
+    //orders.sort(new DistancePlusItemsSorter(drone));
+    return orders.remove(0);
+  }
+  
   @VisibleForTesting
   public static int getDistance(Location c1, Location c2) {
     int ra = c1.X;
@@ -85,7 +92,7 @@ public class Simulation {
     int bestDist = 100000;
 
     for (Warehouse warehouse : warehouses) {
-      int distance = getDistance(position, warehouse.getLocation());
+      int distance = getDistance(order.getDeliveryLocation(), warehouse.getLocation());
       if (warehouse.isEligable(order) && distance < bestDist) {
         bestDist = distance;
         result = warehouse;
